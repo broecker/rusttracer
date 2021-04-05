@@ -51,10 +51,26 @@ impl ops::Add<Vec3> for Vec3 {
   }
 }
 
+impl ops::AddAssign<Vec3> for Vec3 {
+  fn add_assign(&mut self, _rhs: Vec3) {
+    self.x += _rhs.x;
+    self.y += _rhs.y;
+    self.z += _rhs.z;
+  }
+}
+
 impl ops::Sub<Vec3> for Vec3 {
   type Output = Vec3;
   fn sub(self, _rhs: Vec3) -> Vec3 {
     Vec3{x: self.x - _rhs.x, y: self.y - _rhs.y, z: self.z - _rhs.z}
+  }
+}
+
+impl ops::SubAssign<Vec3> for Vec3 {
+  fn sub_assign(&mut self, _rhs: Vec3) {
+    self.x -= _rhs.x;
+    self.y -= _rhs.y;
+    self.z -= _rhs.z;
   }
 }
 
