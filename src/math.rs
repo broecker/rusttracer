@@ -22,9 +22,13 @@ pub struct Ray {
 }
 
 impl Color {
-
-  pub fn from(r: f32, g: f32, b: f32) -> Color {
-    return Color{r,g,b};
+  pub fn lerp(a: &Color, b: &Color, t: f32) -> Color {
+    let s = 1.0 - t;
+    Color{
+      r: s*a.r + t*b.r,
+      g: s*a.g + t*b.g,
+      b: s*a.b + t*b.b,
+    }
   }
 
   pub fn to_u8(&self) -> (u8,u8,u8) {
@@ -41,6 +45,16 @@ impl Vec3 {
 
   pub fn mag(&self) -> f32 {
     self.mag_squared().sqrt()
+  }
+
+  pub fn normalized(&self) -> Vec3 {
+    *self / self.mag()
+  }
+}
+
+impl Ray {
+  pub fn at(&self, t: f32) -> Vec3 {
+    self.origin + self.direction * t
   }
 }
 
@@ -86,5 +100,12 @@ impl ops::Mul<f32> for Vec3 {
   type Output = Vec3;
   fn mul(self, _rhs: f32) -> Vec3 {
     Vec3{x: self.x*_rhs, y: self.y*_rhs, z: self.z*_rhs}
+  }
+}
+
+impl ops::Div<f32> for Vec3 {
+  type Output = Vec3;
+  fn div(self, _rhs: f32) -> Vec3 {
+    Vec3{x: self.x/_rhs, y: self.y/_rhs, z: self.z/_rhs}
   }
 }
