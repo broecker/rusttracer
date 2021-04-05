@@ -1,4 +1,6 @@
 
+use std::io::Write;
+
 mod math;
 
 use math::Color;
@@ -30,17 +32,22 @@ fn main() {
     let vertical = Vec3{x:0.0, y:viewport_height, z: 0.0};
     let lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - Vec3{x:0.0, y:0.0, z:focal_length};
 
-    // Render
-    println!("P3\n{} {}\n255", image_width, image_height);
+    // File output.
+    let mut file = std::fs::File::create("output.ppm").expect("File creation failed.");
+    file.write_all(format!("P3\n{} {}\n255", image_width, image_height).as_bytes()).expect("File writing failed.");
 
+    // Render!
     for j in 0..image_height {
+      if j % 10 == 0 {
+        println!("Tracing row {}", j);
+      }
         for i in 0..image_width {
           let u = i as f32 / (image_width + 1) as f32;
           let v = 1.0 - j as f32 / (image_height + 1) as f32;
 
           let ray = Ray{ origin: origin, direction: lower_left_corner + horizontal*u + vertical*v - origin };
           let color = ray_color(&ray).to_u8();
-          println!("{} {} {}", color.0, color.1, color.2);
+          file.write_all(format!("{} {} {}", color.0, color.1, color.2).as_bytes()).expect("File writing failed.");
         }
     }
 }
