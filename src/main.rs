@@ -18,8 +18,8 @@ fn ray_color(ray: &Ray) -> Color {
 
 fn main() {
     // Image
-    let image_width = 256;
-    let image_height = 256;
+    let image_width = 512;
+    let image_height = 512;
     let aspect_ratio = image_width as f32 / image_height as f32;
 
     // Camera
@@ -34,20 +34,20 @@ fn main() {
 
     // File output.
     let mut file = std::fs::File::create("output.ppm").expect("File creation failed.");
-    file.write_all(format!("P3\n{} {}\n255", image_width, image_height).as_bytes()).expect("File writing failed.");
+    file.write_all(format!("P3\n{} {}\n255\n  ", image_width, image_height).as_bytes()).expect("File writing failed.");
 
     // Render!
     for j in 0..image_height {
-      if j % 10 == 0 {
-        println!("Tracing row {}", j);
-      }
-        for i in 0..image_width {
-          let u = i as f32 / (image_width + 1) as f32;
-          let v = 1.0 - j as f32 / (image_height + 1) as f32;
+      let progress = ((j as f32 / image_height as f32) * 100.0) as u32;
+      println!("Progress: {}% (line {})", progress, j);
 
-          let ray = Ray{ origin: origin, direction: lower_left_corner + horizontal*u + vertical*v - origin };
-          let color = ray_color(&ray).to_u8();
-          file.write_all(format!("{} {} {}", color.0, color.1, color.2).as_bytes()).expect("File writing failed.");
-        }
+      for i in 0..image_width {
+        let u = i as f32 / (image_width + 1) as f32;
+        let v = 1.0 - j as f32 / (image_height + 1) as f32;
+
+        let ray = Ray{ origin: origin, direction: lower_left_corner + horizontal*u + vertical*v - origin };
+        let color = ray_color(&ray).to_u8();
+        file.write_all(format!("{} {} {}\n", color.0, color.1, color.2).as_bytes()).expect("File writing failed.");
+      }
     }
 }
