@@ -1,13 +1,9 @@
 
+mod math;
 
-use cgmath::Vector3;
-
-mod ray;
+use math::Color;
 
 fn main() {
-
-    let v = Vector3::new(1,0,0);
-
     // Image
     let image_width = 256;
     let image_height = 256;
@@ -21,14 +17,8 @@ fn main() {
             let g = j as f32 / (image_height - 1) as f32;
             let b = 0.25;
 
-            let ir = (r * 255.0) as u8;
-            let ig = (g * 255.0) as u8;
-            let ib = (b * 255.0) as u8;
-
-            println!("{} {} {}", ir, ig, ib);
+            let color = Color::from(r, g, b).to_u8();
+            println!("{} {} {}", color.0, color.1, color.2);
         }
     }
-
-    let ray = ray::Ray{origin:Vector3::new(0,0,0), direction:Vector3::new(0,0,-1)};
-
 }
