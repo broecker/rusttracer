@@ -1,6 +1,7 @@
 
 use std::io::Write;
 
+mod intersection;
 mod math;
 
 use math::Color;
@@ -8,6 +9,11 @@ use math::Ray;
 use math::Vec3;
 
 fn ray_color(ray: &Ray) -> Color {
+
+  if intersection::hit_sphere(&Vec3{x:0.0, y: 0.0, z: -1.0}, 0.6, ray) {
+    return Color{r: 1.0, g: 0.0, b: 0.0}
+  }
+
   let unit_direction = ray.direction.normalized();
   let t = 0.5 * (unit_direction.y + 1.0);
   let white = Color{r: 1.0, g: 1.0, b: 1.0 };
