@@ -13,13 +13,8 @@ use intersection::Sphere;
 use crate::intersection::Intersectable;
 
 fn ray_color(ray: &Ray) -> Color {
-
-  let mut hit_record = HitRecord{
-    point: Vec3::zero(),
-    normal: Vec3::zero(),
-    t: -1.0
-  };
-  let sphere = Sphere::new(Vec3{x:0.0, y:0.0, z:0.0}, 0.6);
+  let mut hit_record = HitRecord::new();
+  let sphere = Sphere::new(Vec3{x: 0.0, y: 0.0, z: -1.0}, 0.6);
 
   if sphere.intersect(&ray, 0.0, 10.0, &mut hit_record) {
       let mut n = hit_record.normal.clone();
