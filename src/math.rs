@@ -48,7 +48,11 @@ impl Color {
 
 impl Vec3 {
   pub fn mag(&self) -> f32 {
-    Vec3::dot(self, self).sqrt()
+    self.mag_squared().sqrt()
+  }
+
+  pub fn mag_squared(&self) -> f32 {
+    return Vec3::dot(self, self)
   }
 
   pub fn normalized(&self) -> Vec3 {
@@ -57,6 +61,10 @@ impl Vec3 {
 
   pub fn dot(a: &Vec3, b: &Vec3) -> f32 {
     a.x*b.x + a.y*b.y + a.z*b.z
+  }
+
+  pub fn zero() -> Vec3 {
+    return Vec3{x: 0.0, y: 0.0, z: 0.0}
   }
 
   pub fn one() -> Vec3 {

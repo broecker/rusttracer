@@ -8,11 +8,21 @@ use math::Color;
 use math::Ray;
 use math::Vec3;
 
+use intersection::HitRecord;
+use intersection::Sphere;
+use crate::intersection::Intersectable;
+
 fn ray_color(ray: &Ray) -> Color {
 
-  let t = intersection::hit_sphere(&Vec3{x:0.0, y: 0.0, z: -1.0}, 0.6, ray);
-  if t > 0.0 {
-      let mut n = (ray.at(t) - Vec3{x:0.0, y: 0.0, z:-1.0}).normalized();
+  let mut hit_record = HitRecord{
+    point: Vec3::zero(),
+    normal: Vec3::zero(),
+    t: -1.0
+  };
+  let sphere = Sphere::new(Vec3{x:0.0, y:0.0, z:0.0}, 0.6);
+
+  if sphere.intersect(&ray, 0.0, 10.0, &mut hit_record) {
+      let mut n = hit_record.normal.clone();
       n += Vec3::one();
       n *= 0.5;
       return Color::from_vec3(&n)
