@@ -10,8 +10,12 @@ use math::Vec3;
 
 fn ray_color(ray: &Ray) -> Color {
 
-  if intersection::hit_sphere(&Vec3{x:0.0, y: 0.0, z: -1.0}, 0.6, ray) {
-    return Color{r: 1.0, g: 0.0, b: 0.0}
+  let t = intersection::hit_sphere(&Vec3{x:0.0, y: 0.0, z: -1.0}, 0.6, ray);
+  if t > 0.0 {
+      let mut n = (ray.at(t) - Vec3{x:0.0, y: 0.0, z:-1.0}).normalized();
+      n += Vec3::one();
+      n *= 0.5;
+      return Color::from_vec3(&n)
   }
 
   let unit_direction = ray.direction.normalized();

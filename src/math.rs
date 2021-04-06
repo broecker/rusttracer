@@ -31,6 +31,14 @@ impl Color {
     }
   }
 
+  pub fn from_vec3(v: &Vec3) -> Color {
+    return Color {
+      r: v.x,
+      g: v.y,
+      b: v.z
+    }
+  }
+
   pub fn to_u8(&self) -> (u8,u8,u8) {
     return ((self.r * 255.0) as u8,
             (self.g * 255.0) as u8,
@@ -49,6 +57,10 @@ impl Vec3 {
 
   pub fn dot(a: &Vec3, b: &Vec3) -> f32 {
     a.x*b.x + a.y*b.y + a.z*b.z
+  }
+
+  pub fn one() -> Vec3 {
+    return Vec3{x: 1.0, y: 1.0, z: 1.0}
   }
 }
 
@@ -100,6 +112,14 @@ impl ops::Mul<f32> for Vec3 {
   type Output = Vec3;
   fn mul(self, _rhs: f32) -> Vec3 {
     Vec3{x: self.x*_rhs, y: self.y*_rhs, z: self.z*_rhs}
+  }
+}
+
+impl ops::MulAssign<f32> for Vec3 {
+  fn mul_assign(&mut self, _rhs: f32) {
+    self.x *= _rhs;
+    self.y *= _rhs;
+    self.z *= _rhs;
   }
 }
 
