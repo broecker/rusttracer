@@ -1,6 +1,7 @@
 
 use std::io::Write;
 
+mod camera;
 mod intersection;
 mod math;
 
@@ -8,10 +9,13 @@ use math::Color;
 use math::Ray;
 use math::Vec3;
 
+use rand::Rng;
+
 use intersection::HitRecord;
 use intersection::Sphere;
 use crate::intersection::Intersectable;
 use crate::intersection::IntersectableList;
+use camera::Camera;
 
 fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>) -> Color {
   let mut hit_record = HitRecord::new();
@@ -31,11 +35,20 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>) -> Color {
   return Color::lerp(&white, &blueish, t)
 }
 
+
+
+
+
+
 fn main() {
+    // RNG
+    let mut rng = rand::thread_rng();
+
     // Image
     let image_width = 512;
     let image_height = 512;
     let aspect_ratio = image_width as f32 / image_height as f32;
+    let samples_per_pixel = 200;
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
@@ -43,14 +56,7 @@ fn main() {
     world.add(Sphere::new(Vec3{x: 0.0, y: -100.5, z: -1.0}, 100.0));
 
     // Camera
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
-
-    let origin = Vec3{x:0.0, y:0.0, z:0.0};
-    let horizontal = Vec3{x:viewport_width, y: 0.0, z: 0.0};
-    let vertical = Vec3{x:0.0, y:viewport_height, z: 0.0};
-    let lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - Vec3{x:0.0, y:0.0, z:focal_length};
+    let camera = Camera::new(aspect_ratio);
 
     // File output.
     let mut file = std::fs::File::create("output.ppm").expect("File creation failed.");
@@ -62,12 +68,24 @@ fn main() {
       println!("Progress: {}% (line {})", progress, j);
 
       for i in 0..image_width {
-        let u = i as f32 / (image_width + 1) as f32;
-        let v = 1.0 - j as f32 / (image_height + 1) as f32;
+        let mut color = Color{r:0.0, g:0.0, b:0.0};
+        for _sample in 0..samples_per_pixel {
+          let u = (i as f32 + rng.gen_range(0.0..1.0)) / (image_width as f32 - 1.0);
+          let v = 1.0 - (j as f32 + rng.gen_range(0.0..1.0)) / (image_height as f32 - 1.0);
 
-        let ray = Ray{ origin: origin, direction: lower_left_corner + horizontal*u + vertical*v - origin };
-        let color = ray_color(&ray, &world).to_u8();
-        file.write_all(format!("{} {} {}\n", color.0, color.1, color.2).as_bytes()).expect("File writing failed.");
+          let ray = camera.get_ray(u, v);
+          let ray_color = ray_color(&ray, &world);
+          color.r += ray_color.r;
+          color.g += ray_color.g;
+          color.b += ray_color.b;
+        }
+
+        color.r = color.r / samples_per_pixel as f32;
+        color.g = color.g / samples_per_pixel as f32;
+        color.b = color.b / samples_per_pixel as f32;
+
+        let image_color = color.to_u8();
+        file.write_all(format!("{} {} {}\n", image_color.0, image_color.1, image_color.2).as_bytes()).expect("File writing failed.");
       }
     }
 }
