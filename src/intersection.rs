@@ -2,7 +2,7 @@
 use crate::math::Ray;
 use crate::math::Vec3;
 
-
+#[derive(Clone, Copy)]
 pub struct HitRecord {
   // Intersection point in world coordinates.
   pub point: Vec3,
@@ -14,6 +14,7 @@ pub struct HitRecord {
   pub front_face: bool,
 }
 
+// All the objects we can intersect.
 pub trait Intersectable {
   fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool;
 }
@@ -22,6 +23,12 @@ pub struct Sphere {
   center: Vec3,
   radius: f32,
 }
+
+// See: https://bennetthardwick.com/blog/dont-use-boxed-trait-objects-for-struct-internals/
+pub struct IntersectableList<I: Intersectable> {
+  objects: Vec<I>,
+}
+
 
 impl Sphere {
   pub fn new(center: Vec3, radius: f32) -> Sphere {
@@ -75,5 +82,36 @@ impl Intersectable for Sphere {
     let normal = (hit.point - self.center) / self.radius;
     hit.set_face_normal(ray, normal);
     return true
+  }
+}
+
+impl<I: Intersectable> IntersectableList<I> {
+  pub fn new() -> IntersectableList<I> {
+    return IntersectableList{objects: Vec::new()};
+  }
+
+  pub fn add(&mut self, object: I) {
+    self.objects.push(object);
+  }
+
+  pub fn clear(&mut self) {
+    self.objects.clear();
+  }
+
+}
+
+impl<I:Intersectable> Intersectable for IntersectableList<I> {
+  fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool {
+    let mut any_hit = false;
+    let mut closest = t_max;
+    let mut record: HitRecord = HitRecord::new();
+    for obj in self.objects.iter() {
+      if obj.intersect(&ray, t_min, closest, &mut record) {
+        any_hit = true;
+        closest = record.t;
+        *hit = record;
+      }
+    }
+    any_hit
   }
 }

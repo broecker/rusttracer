@@ -11,16 +11,16 @@ use math::Vec3;
 use intersection::HitRecord;
 use intersection::Sphere;
 use crate::intersection::Intersectable;
+use crate::intersection::IntersectableList;
 
-fn ray_color(ray: &Ray) -> Color {
+fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>) -> Color {
   let mut hit_record = HitRecord::new();
-  let sphere = Sphere::new(Vec3{x: 0.0, y: 0.0, z: -1.0}, 0.6);
 
-  if sphere.intersect(&ray, 0.0, 10.0, &mut hit_record) {
-      let mut n = hit_record.normal.clone();
-      n += Vec3::one();
-      n *= 0.5;
-      return Color::from_vec3(&n)
+  if world.intersect(ray, 0.0, 10000.0, &mut hit_record) {
+    let mut n = hit_record.normal.clone();
+    n += Vec3::one();
+    n *= 0.5;
+    return Color::from_vec3(&n)
   }
 
   let unit_direction = ray.direction.normalized();
@@ -36,6 +36,11 @@ fn main() {
     let image_width = 512;
     let image_height = 512;
     let aspect_ratio = image_width as f32 / image_height as f32;
+
+    // World
+    let mut world = IntersectableList::<Sphere>::new();
+    world.add(Sphere::new(Vec3{x: 0.0, y: 0.0, z: -1.0}, 0.5));
+    world.add(Sphere::new(Vec3{x: 0.0, y: -100.5, z: -1.0}, 100.0));
 
     // Camera
     let viewport_height = 2.0;
@@ -61,7 +66,7 @@ fn main() {
         let v = 1.0 - j as f32 / (image_height + 1) as f32;
 
         let ray = Ray{ origin: origin, direction: lower_left_corner + horizontal*u + vertical*v - origin };
-        let color = ray_color(&ray).to_u8();
+        let color = ray_color(&ray, &world).to_u8();
         file.write_all(format!("{} {} {}\n", color.0, color.1, color.2).as_bytes()).expect("File writing failed.");
       }
     }
