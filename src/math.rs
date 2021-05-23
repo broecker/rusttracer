@@ -1,5 +1,6 @@
 
 use std::ops;
+use rand::Rng;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec3 {
@@ -67,8 +68,18 @@ impl Vec3 {
     return Vec3{x: 0.0, y: 0.0, z: 0.0}
   }
 
-  pub fn one() -> Vec3 {
-    return Vec3{x: 1.0, y: 1.0, z: 1.0}
+  pub fn random() -> Vec3 {
+    let mut rng = rand::thread_rng();
+    return Vec3{x: rng.gen_range(-1.0..1.0), y: rng.gen_range(-1.0..1.0), z: rng.gen_range(-1.0..1.0)};
+  }
+
+  pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+      let v = Vec3::random();
+      if v.mag_squared() < 1.0 {
+        return v
+      }
+    }
   }
 }
 
@@ -157,5 +168,12 @@ impl ops::Div<f32> for Color {
   type Output = Color;
   fn div(self, _rhs: f32) -> Color {
     Color{r: self.r/_rhs, g: self.g/_rhs, b: self.b/_rhs}
+  }
+}
+
+impl ops::Mul<f32> for Color {
+  type Output = Color;
+  fn mul(self, _rhs: f32) -> Color {
+    Color{r: self.r*_rhs, g: self.g*_rhs, b: self.b*_rhs}
   }
 }

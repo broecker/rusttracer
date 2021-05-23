@@ -17,14 +17,16 @@ use crate::intersection::Intersectable;
 use crate::intersection::IntersectableList;
 use camera::Camera;
 
-fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>) -> Color {
+fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: i32) -> Color {
   let mut hit_record = HitRecord::new();
 
-  if world.intersect(ray, 0.0, 10000.0, &mut hit_record) {
-    let mut n = hit_record.normal.clone();
-    n += Vec3::one();
-    n *= 0.5;
-    return Color::from_vec3(&n)
+  if depth <= 0 {
+    return Color{r: 0.0, g: 0.0, b: 0.0};
+  }
+
+  if world.intersect(ray, 0.0001, 10000.0, &mut hit_record) {
+    let target = hit_record.point + hit_record.normal + Vec3::random_in_unit_sphere().normalized();
+    return ray_color(&Ray{origin: hit_record.point, direction: target - hit_record.point}, world, depth-1) * 0.5;
   }
 
   let unit_direction = ray.direction.normalized();
@@ -35,6 +37,15 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>) -> Color {
   return Color::lerp(&white, &blueish, t)
 }
 
+fn write_color(mut color: Color, samples_per_pixel: i32, gamma: f32) -> String {
+  color.r = (color.r / samples_per_pixel as f32).powf(1.0 / gamma);
+  color.g = (color.g / samples_per_pixel as f32).powf(1.0 / gamma);
+  color.b = (color.b / samples_per_pixel as f32).powf(1.0 / gamma);
+
+  let image_color = color.to_u8();
+  return format!("{} {} {}\n", image_color.0, image_color.1, image_color.2);
+}
+
 fn main() {
     // RNG
     let mut rng = rand::thread_rng();
@@ -43,7 +54,9 @@ fn main() {
     let image_width = 512;
     let image_height = 512;
     let aspect_ratio = image_width as f32 / image_height as f32;
-    let samples_per_pixel = 200;
+    let samples_per_pixel = 500;
+    let max_depth = 50;
+    let gamma = 2.0;
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
@@ -69,11 +82,10 @@ fn main() {
           let v = 1.0 - (j as f32 + rng.gen_range(0.0..1.0)) / (image_height as f32 - 1.0);
 
           let ray = camera.get_ray(u, v);
-          color += ray_color(&ray, &world);
+          color += ray_color(&ray, &world, max_depth);
         }
 
-        let image_color = (color / samples_per_pixel as f32).to_u8();
-        file.write_all(format!("{} {} {}\n", image_color.0, image_color.1, image_color.2).as_bytes()).expect("File writing failed.");
+        file.write_all(write_color(color, samples_per_pixel, gamma).as_bytes()).expect("File writing failed.");
       }
     }
 }
