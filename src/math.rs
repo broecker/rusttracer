@@ -45,6 +45,10 @@ impl Color {
             (self.g * 255.0) as u8,
             (self.b * 255.0) as u8);
   }
+
+  pub fn black() -> Color {
+    return Color {r: 0.0, g:0.0, b:0.0 }
+  }
 }
 
 impl Vec3 {
@@ -175,5 +179,13 @@ impl ops::Mul<f32> for Color {
   type Output = Color;
   fn mul(self, _rhs: f32) -> Color {
     Color{r: self.r*_rhs, g: self.g*_rhs, b: self.b*_rhs}
+  }
+}
+
+impl ops::MulAssign<f32> for Color {
+  fn mul_assign(&mut self, _rhs: f32) {
+    self.r *= _rhs;
+    self.g *= _rhs;
+    self.b *= _rhs;
   }
 }
