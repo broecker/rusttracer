@@ -137,3 +137,25 @@ impl ops::Div<f32> for Vec3 {
     Vec3{x: self.x/_rhs, y: self.y/_rhs, z: self.z/_rhs}
   }
 }
+
+impl ops::Add<Color> for Color {
+  type Output = Color;
+  fn add(self, _rhs: Color) -> Color {
+    Color{r: self.r + _rhs.r, g: self.g + _rhs.g, b: self.b + _rhs.b}
+  }
+}
+
+impl ops::AddAssign<Color> for Color {
+  fn add_assign(&mut self, _rhs: Color) {
+    self.r += _rhs.r;
+    self.g += _rhs.g;
+    self.b += _rhs.b;
+  }
+}
+
+impl ops::Div<f32> for Color {
+  type Output = Color;
+  fn div(self, _rhs: f32) -> Color {
+    Color{r: self.r/_rhs, g: self.g/_rhs, b: self.b/_rhs}
+  }
+}

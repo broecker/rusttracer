@@ -35,11 +35,6 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>) -> Color {
   return Color::lerp(&white, &blueish, t)
 }
 
-
-
-
-
-
 fn main() {
     // RNG
     let mut rng = rand::thread_rng();
@@ -74,17 +69,10 @@ fn main() {
           let v = 1.0 - (j as f32 + rng.gen_range(0.0..1.0)) / (image_height as f32 - 1.0);
 
           let ray = camera.get_ray(u, v);
-          let ray_color = ray_color(&ray, &world);
-          color.r += ray_color.r;
-          color.g += ray_color.g;
-          color.b += ray_color.b;
+          color += ray_color(&ray, &world);
         }
 
-        color.r = color.r / samples_per_pixel as f32;
-        color.g = color.g / samples_per_pixel as f32;
-        color.b = color.b / samples_per_pixel as f32;
-
-        let image_color = color.to_u8();
+        let image_color = (color / samples_per_pixel as f32).to_u8();
         file.write_all(format!("{} {} {}\n", image_color.0, image_color.1, image_color.2).as_bytes()).expect("File writing failed.");
       }
     }
