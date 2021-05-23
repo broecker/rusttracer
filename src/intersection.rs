@@ -93,11 +93,6 @@ impl<I: Intersectable> IntersectableList<I> {
   pub fn add(&mut self, object: I) {
     self.objects.push(object);
   }
-
-  pub fn clear(&mut self) {
-    self.objects.clear();
-  }
-
 }
 
 impl<I:Intersectable> Intersectable for IntersectableList<I> {
