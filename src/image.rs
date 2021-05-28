@@ -8,6 +8,12 @@ pub struct Image {
   data: Vec<Color>
 }
 
+pub struct Tile {
+  pub x: u32,
+  pub y: u32,
+  pub image: Image,
+}
+
 impl Image {
   pub fn new(width: usize, height: usize) -> Image {    
     return Image {
@@ -15,44 +21,41 @@ impl Image {
     }
   }
 
-  // Create a sub image from x,y with width,height dimensions.
-  pub fn sub_image(&self, x: u32, y: u32, width: usize, height: usize) -> Image {
-    assert!(x as usize + width < self.width);
-    assert!(y as usize + height < self.height);
+  pub fn get_tile(&self, x: u32, y: u32, width: usize, height: usize) -> Tile {
+    assert!(x as usize + width <= self.width);
+    assert!(y as usize + height <= self.height);
 
-    let mut tile = Image::new(width, height);
+    let mut tile = Tile{x: x, y: y, image: Image::new(width, height)};
     for u in 0..width as u32 {
       for v in 0..height as u32 {
-        tile.put_pixel(u, v, *self.get_pixel(x + u, y + v) );
+        tile.image.put_pixel(u, v, *self.get_pixel(x + u, y + v) );
       }
     }
     tile
   }
 
-  pub fn split(&self, tiles_w: usize, tiles_h: usize) -> Vec<Image> {
+  pub fn split_into_tiles(&self, tiles_w: usize, tiles_h: usize) -> Vec<Tile> {
     let size_w = self.width / tiles_w;
     let size_h = self.height / tiles_h;
     assert_eq!(size_w * tiles_w, self.width);
     assert_eq!(size_h * tiles_h, self.height);
 
     let mut tiles = vec!();
-
     for u in 0..tiles_w {
       for v in 0..tiles_h {
-        tiles.push(self.sub_image((u*size_w) as u32, (v*size_h) as u32, size_w, size_h));
+        tiles.push(self.get_tile((u*size_w) as u32, (v*size_h) as u32, size_w, size_h));
       }
     }
-
     tiles
   }
 
-  pub fn set_tile(&mut self, x: u32, y: u32, tile: &Image) {
-    assert!(x + tile.width() < self.width());
-    assert!(y + tile.height() < self.height());
+  pub fn set_tile(&mut self, tile: &Tile) {
+    assert!(tile.x + tile.image.width() <= self.width());
+    assert!(tile.y + tile.image.height() <= self.height());
 
-    for u in 0..tile.width() {
-      for v in 0..tile.height() {
-        self.put_pixel(x + u, y + v, *tile.get_pixel(u, v));
+    for u in 0..tile.image.width() {
+      for v in 0..tile.image.height() {
+        self.put_pixel(tile.x + u, tile.y + v, *tile.image.get_pixel(u, v));
       }
     }
   }

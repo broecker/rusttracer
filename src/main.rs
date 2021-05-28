@@ -42,35 +42,40 @@ fn main() {
 
     // Image
     let mut image = image::Image::new(512, 512);
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 25;
     let max_depth = 50;
     let gamma = 2.0;
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
-    world.add(Sphere::new(Vec3{x: 0.0, y: 0.0, z: -1.0}, 0.5));
+    world.add(Sphere::new(Vec3{x:  0.5, y: 0.0, z: -1.0}, 0.5));
+    world.add(Sphere::new(Vec3{x: -0.5, y: 0.0, z: -1.0}, 0.5));
     world.add(Sphere::new(Vec3{x: 0.0, y: -100.5, z: -1.0}, 100.0));
 
     // Camera
     let camera = Camera::new(image.aspect_ratio());
 
     // Render!
-    for j in 0..image.height() {
-      let progress = ((j as f32 / image.height() as f32) * 100.0) as u32;
-      println!("Progress: {}% (line {})", progress, j);
+    for mut tile in image.split_into_tiles(4, 4) {
+      println!("Starting tile {}{}", tile.x, tile.y);
+      for j in 0..tile.image.height() {
+        let progress = ((j as f32 / tile.image.height() as f32) * 100.0) as u32;
+        println!("Progress: {}% (line {})", progress, j);
 
-      for i in 0..image.width() {
-        let mut color = Color{r:0.0, g:0.0, b:0.0};
-        for _sample in 0..samples_per_pixel {
-          let u = (i as f32 + rng.gen_range(0.0..1.0)) / (image.width() as f32 - 1.0);
-          let v = 1.0 - (j as f32 + rng.gen_range(0.0..1.0)) / (image.height() as f32 - 1.0);
+        for i in 0..tile.image.width() {
+          let mut color = Color{r:0.0, g:0.0, b:0.0};
+          for _sample in 0..samples_per_pixel {
+            let u = (i as f32 + rng.gen_range(0.0..1.0)) / (tile.image.width() as f32 - 1.0);
+            let v = 1.0 - (j as f32 + rng.gen_range(0.0..1.0)) / (tile.image.height() as f32 - 1.0);
 
-          let ray = camera.get_ray(u, v);
-          color += ray_color(&ray, &world, max_depth);
+            let ray = camera.get_ray(u, v);
+            color += ray_color(&ray, &world, max_depth);
+          }
+
+          tile.image.put_pixel(i, j, color / samples_per_pixel as f32);
         }
-
-        image.put_pixel(i, j, color / samples_per_pixel as f32);
       }
+      image.set_tile(&tile);
     }
 
     // File output.
