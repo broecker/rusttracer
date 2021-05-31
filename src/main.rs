@@ -42,7 +42,7 @@ fn main() {
 
     // Image
     let mut image = image::Image::new(512, 512);
-    let samples_per_pixel = 25;
+    let samples_per_pixel = 5000;
     let max_depth = 50;
     let gamma = 2.0;
 
@@ -57,7 +57,8 @@ fn main() {
 
     // Render!
     for mut tile in image.split_into_tiles(4, 4) {
-      println!("Starting tile {}{}", tile.x, tile.y);
+      println!("Starting tile ({},{})", tile.x, tile.y);
+      println!("-----------------------------------------------------------");
       for j in 0..tile.image.height() {
         let progress = ((j as f32 / tile.image.height() as f32) * 100.0) as u32;
         println!("Progress: {}% (line {})", progress, j);
@@ -65,8 +66,10 @@ fn main() {
         for i in 0..tile.image.width() {
           let mut color = Color{r:0.0, g:0.0, b:0.0};
           for _sample in 0..samples_per_pixel {
-            let u = (i as f32 + rng.gen_range(0.0..1.0)) / (tile.image.width() as f32 - 1.0);
-            let v = 1.0 - (j as f32 + rng.gen_range(0.0..1.0)) / (tile.image.height() as f32 - 1.0);
+            let coord = tile.tile_to_image_coordinates(i, j);
+
+            let u = (coord.0 as f32 + rng.gen_range(0.0..1.0)) / (image.width() as f32 - 1.0);
+            let v = 1.0 - (coord.1 as f32 + rng.gen_range(0.0..1.0)) / (image.height() as f32 - 1.0);
 
             let ray = camera.get_ray(u, v);
             color += ray_color(&ray, &world, max_depth);

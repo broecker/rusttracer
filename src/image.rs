@@ -1,4 +1,5 @@
 use std::io::Write;
+use rand::Rng;
 
 use crate::math::Color;
 
@@ -102,5 +103,11 @@ impl Image {
   fn write_pixel(&self, idx: usize) -> String {
     let image_color = self.data[idx].to_u8();
     format!("{} {} {}\n", image_color.0, image_color.1, image_color.2)
+  }
+}
+
+impl Tile {
+  pub fn tile_to_image_coordinates(&self, x: u32, y: u32) -> (u32, u32) {
+    (self.x + x, self.y+y)
   }
 }
