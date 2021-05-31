@@ -16,7 +16,18 @@ use crate::intersection::Intersectable;
 use crate::intersection::IntersectableList;
 use camera::Camera;
 
-fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: i32) -> Color {
+extern crate scoped_threadpool;
+use scoped_threadpool::Pool;
+
+struct RenderSettings {
+  samples_per_pixel: u32, 
+  max_recursion_depth: u32,
+  image_gamma: f32,
+  render_threads: u32
+}
+
+
+fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: u32) -> Color {
   let mut hit_record = HitRecord::new();
 
   if depth <= 0 {
@@ -36,15 +47,54 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: i32) -> Color 
   return Color::lerp(&white, &blueish, t)
 }
 
-fn main() {
-    // RNG
-    let mut rng = rand::thread_rng();
+fn trace(image: &mut image::Image, camera: &Camera, world: &IntersectableList<Sphere>, render_settings: &RenderSettings) { 
+  let image_w = image.width();
+  let image_h = image.height();
 
+  // Threading
+  let mut pool = Pool::new(render_settings.render_threads);
+
+  // Render!    
+  let mut tiles = image.split_into_tiles(16, 16);
+  pool.scoped(|scope| {
+    for tile in &mut tiles {
+      scope.execute(move || {
+        // RNG
+        let mut rng = rand::thread_rng();
+
+        for j in 0..tile.image.height() {
+          print!(".");
+          for i in 0..tile.image.width() {
+            let mut color = Color{r:0.0, g:0.0, b:0.0};
+            for _sample in 0..render_settings.samples_per_pixel {
+              let coord = tile.tile_to_image_coordinates(i, j);
+
+              let u = (coord.0 as f32 + rng.gen_range(0.0..1.0)) / (image_w as f32 - 1.0);
+              let v = 1.0 - (coord.1 as f32 + rng.gen_range(0.0..1.0)) / (image_h as f32 - 1.0);
+
+              let ray = camera.get_ray(u, v);
+              color += ray_color(&ray, &world, render_settings.max_recursion_depth);
+            }
+
+            tile.image.put_pixel(i, j, color / render_settings.samples_per_pixel as f32);
+          }
+        }
+
+      });
+    }
+  });
+
+  for tile in &tiles {
+    image.set_tile(tile);
+  }
+}
+
+
+fn main() {
     // Image
     let mut image = image::Image::new(512, 512);
-    let samples_per_pixel = 5000;
-    let max_depth = 50;
-    let gamma = 2.0;
+
+    let render_settings = RenderSettings{samples_per_pixel: 2000, max_recursion_depth: 50, image_gamma: 2.0, render_threads: 16};
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
@@ -55,33 +105,10 @@ fn main() {
     // Camera
     let camera = Camera::new(image.aspect_ratio());
 
-    // Render!
-    for mut tile in image.split_into_tiles(4, 4) {
-      println!("Starting tile ({},{})", tile.x, tile.y);
-      println!("-----------------------------------------------------------");
-      for j in 0..tile.image.height() {
-        let progress = ((j as f32 / tile.image.height() as f32) * 100.0) as u32;
-        println!("Progress: {}% (line {})", progress, j);
+    trace(&mut image, &camera, &world, &render_settings);
 
-        for i in 0..tile.image.width() {
-          let mut color = Color{r:0.0, g:0.0, b:0.0};
-          for _sample in 0..samples_per_pixel {
-            let coord = tile.tile_to_image_coordinates(i, j);
-
-            let u = (coord.0 as f32 + rng.gen_range(0.0..1.0)) / (image.width() as f32 - 1.0);
-            let v = 1.0 - (coord.1 as f32 + rng.gen_range(0.0..1.0)) / (image.height() as f32 - 1.0);
-
-            let ray = camera.get_ray(u, v);
-            color += ray_color(&ray, &world, max_depth);
-          }
-
-          tile.image.put_pixel(i, j, color / samples_per_pixel as f32);
-        }
-      }
-      image.set_tile(&tile);
-    }
 
     // File output.
-    image.gamma_correct(gamma);
+    image.gamma_correct(render_settings.image_gamma);
     image.write_ppm("output.ppm".to_string());
 }
