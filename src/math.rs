@@ -33,13 +33,13 @@ impl Color {
   }
 
   pub fn to_u8(&self) -> (u8,u8,u8) {
-    return ((self.r * 255.0) as u8,
-            (self.g * 255.0) as u8,
-            (self.b * 255.0) as u8);
+    ((self.r * 255.0) as u8,
+    (self.g * 255.0) as u8,
+    (self.b * 255.0) as u8)
   }
 
   pub fn black() -> Color {
-    return Color {r: 0.0, g:0.0, b:0.0 }
+    Color {r: 0.0, g:0.0, b:0.0}
   }
 }
 
@@ -49,7 +49,7 @@ impl Vec3 {
   }
 
   pub fn mag_squared(&self) -> f32 {
-    return Vec3::dot(self, self)
+    Vec3::dot(self, self)
   }
 
   pub fn normalized(&self) -> Vec3 {
@@ -61,12 +61,12 @@ impl Vec3 {
   }
 
   pub fn zero() -> Vec3 {
-    return Vec3{x: 0.0, y: 0.0, z: 0.0}
+    Vec3{x: 0.0, y: 0.0, z: 0.0}
   }
 
   pub fn random() -> Vec3 {
     let mut rng = rand::thread_rng();
-    return Vec3{x: rng.gen_range(-1.0..1.0), y: rng.gen_range(-1.0..1.0), z: rng.gen_range(-1.0..1.0)};
+    Vec3{x: rng.gen_range(-1.0..1.0), y: rng.gen_range(-1.0..1.0), z: rng.gen_range(-1.0..1.0)}
   }
 
   pub fn random_in_unit_sphere() -> Vec3 {

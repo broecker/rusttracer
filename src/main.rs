@@ -32,12 +32,12 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: u32) -> Color 
   let mut hit_record = HitRecord::new();
 
   if depth <= 0 {
-    return Color{r: 0.0, g: 0.0, b: 0.0};
+    return Color::black()
   }
 
   if world.intersect(ray, 0.0001, 10000.0, &mut hit_record) {
     let target = hit_record.point + hit_record.normal + Vec3::random_in_unit_sphere().normalized();
-    return ray_color(&Ray{origin: hit_record.point, direction: target - hit_record.point}, world, depth-1) * 0.5;
+    return ray_color(&Ray{origin: hit_record.point, direction: target - hit_record.point}, world, depth-1) * 0.5
   }
 
   let unit_direction = ray.direction.normalized();
@@ -45,7 +45,7 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: u32) -> Color 
   let white = Color{r: 1.0, g: 1.0, b: 1.0 };
   let blueish = Color{r: 0.5, g: 0.7, b: 1.0};
 
-  return Color::lerp(&white, &blueish, t)
+  Color::lerp(&white, &blueish, t)
 }
 
 fn trace(image: &mut image::Image, camera: &Camera, world: &IntersectableList<Sphere>, render_settings: &RenderSettings) { 

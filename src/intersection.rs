@@ -32,13 +32,13 @@ pub struct IntersectableList<I: Intersectable> {
 
 impl Sphere {
   pub fn new(center: Vec3, radius: f32) -> Sphere {
-    return Sphere{center: center, radius: radius}
+    Sphere{center: center, radius: radius}
   }
 }
 
 impl HitRecord {
   pub fn new() -> HitRecord {
-    return HitRecord{
+    HitRecord{
       point: Vec3::zero(),
       normal: Vec3::zero(),
       t: 0.0,
@@ -81,13 +81,13 @@ impl Intersectable for Sphere {
     hit.point = ray.at(root);
     let normal = (hit.point - self.center) / self.radius;
     hit.set_face_normal(ray, normal);
-    return true
+    true
   }
 }
 
 impl<I: Intersectable> IntersectableList<I> {
   pub fn new() -> IntersectableList<I> {
-    return IntersectableList{objects: Vec::new()};
+    IntersectableList{objects: Vec::new()}
   }
 
   pub fn add(&mut self, object: I) {

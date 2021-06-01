@@ -19,15 +19,15 @@ impl Camera {
     let horizontal = Vec3{x:viewport_width, y: 0.0, z: 0.0};
     let vertical = Vec3{x:0.0, y:viewport_height, z: 0.0};
   
-    return Camera{
+    Camera{
       origin: origin,
       horizontal: horizontal,
       vertical: vertical,
       lower_left_corner: origin - horizontal / 2.0 - vertical / 2.0 - Vec3{x: 0.0, y: 0.0, z: focal_length}
-    };
+    }
   }
 
   pub fn get_ray(&self, u: f32, v: f32) -> Ray {
-    return Ray{origin: self.origin, direction: self.lower_left_corner + self.horizontal*u + self.vertical*v - self.origin};
+    Ray{origin: self.origin, direction: self.lower_left_corner + self.horizontal*u + self.vertical*v - self.origin}
   }
 }

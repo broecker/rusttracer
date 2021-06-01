@@ -16,7 +16,7 @@ pub struct Tile {
 
 impl Image {
   pub fn new(width: usize, height: usize) -> Image {    
-    return Image {
+    Image {
       width: width, height: height, data: vec![Color::black(); width*height as usize]
     }
   }
@@ -61,7 +61,7 @@ impl Image {
   }
 
   pub fn aspect_ratio(&self) -> f32 {
-    return self.width as f32 / self.height as f32
+    self.width as f32 / self.height as f32
   }
 
   pub fn put_pixel(&mut self, x: u32, y: u32, color: Color) {
