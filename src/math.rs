@@ -85,6 +85,15 @@ impl Vec3 {
       }
     }
   }
+
+  pub fn random_unit_vector() -> Vec3 {
+    Vec3::random_in_unit_sphere().normalized()
+  }
+
+  pub fn near_zero(&self) -> bool {
+    let e = 1e-8;
+    self.x.abs() < e && self.y.abs() < e && self.z.abs() < e
+  }
 }
 
 impl Ray {
