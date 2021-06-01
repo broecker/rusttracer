@@ -32,14 +32,6 @@ impl Color {
     }
   }
 
-  pub fn from_vec3(v: &Vec3) -> Color {
-    return Color {
-      r: v.x,
-      g: v.y,
-      b: v.z
-    }
-  }
-
   pub fn to_u8(&self) -> (u8,u8,u8) {
     return ((self.r * 255.0) as u8,
             (self.g * 255.0) as u8,

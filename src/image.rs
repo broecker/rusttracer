@@ -1,5 +1,4 @@
 use std::io::Write;
-use rand::Rng;
 
 use crate::math::Color;
 

@@ -5,7 +5,7 @@ use crate::math::Color;
 use crate::math::Ray;
 use crate::math::Vec3;
 
-pub trait Material {
+pub trait Material : Send {
   fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
 }
 

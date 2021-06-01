@@ -2,6 +2,7 @@
 mod camera;
 mod image;
 mod intersection;
+mod material;
 mod math;
 
 use math::Color;
@@ -94,7 +95,7 @@ fn main() {
     // Image
     let mut image = image::Image::new(512, 512);
 
-    let render_settings = RenderSettings{samples_per_pixel: 2000, max_recursion_depth: 50, image_gamma: 2.0, render_threads: 16};
+    let render_settings = RenderSettings{samples_per_pixel: 500, max_recursion_depth: 50, image_gamma: 2.0, render_threads: 16};
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
