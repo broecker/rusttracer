@@ -30,6 +30,11 @@ pub struct Metal {
   pub roughness: f32,
 }
 
+#[derive(Clone, Copy)]
+pub struct Dielectric {
+  pub index_of_refraction: f32,
+}
+
 fn get_scatter_direction(normal: Vec3) -> Vec3 {
   let mut scatter_direction = normal + Vec3::random_unit_vector();
   if scatter_direction.near_zero() {
@@ -77,3 +82,14 @@ impl Material for Metal {
   }
 }
 
+impl Material for Dielectric {
+  fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
+    *attenuation = Color::white();
+    let refraction_ratio = if hit.front_face { 1.0 / self.index_of_refraction } else { self.index_of_refraction };
+    let unit_direction = ray_in.direction.normalized();
+    let refracted = Vec3::refract(&unit_direction, &hit.normal, refraction_ratio);
+    scattered.origin = hit.point;
+    scattered.direction = refracted;
+    true
+  }
+}

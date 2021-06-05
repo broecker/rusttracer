@@ -41,6 +41,10 @@ impl Color {
   pub fn black() -> Color {
     Color {r: 0.0, g:0.0, b:0.0}
   }
+
+  pub fn white() -> Color {
+    Color {r: 1.0, g: 1.0, b: 1.0}
+  }
 }
 
 impl Vec3 {
@@ -62,6 +66,13 @@ impl Vec3 {
 
   pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     return *v - *n * Vec3::dot(v, n) * 2.0
+  }
+
+  pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
+    let cos_theta = Vec3::dot(&(*uv * -1.0), n).min(1.0);
+    let r_out_perp = (*uv + *n * cos_theta) * etai_over_etat;
+    let r_out_parallel = *n * -(1.0 - r_out_perp.mag_squared()).abs().sqrt();
+    r_out_perp + r_out_parallel
   }
 
   pub fn zero() -> Vec3 {

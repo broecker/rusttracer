@@ -109,7 +109,7 @@ fn main() {
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
-    world.add(Sphere::new(Vec3{x:  0.5, y: 0.0, z: -1.0}, 0.5, Box::new(material::Lambertian{albedo: Color{r: 0.8, g: 0.4, b: 0.5}})));
+    world.add(Sphere::new(Vec3{x:  0.5, y: 0.0, z: -1.0}, 0.5, Box::new(material::Dielectric{index_of_refraction: 0.5})));
     world.add(Sphere::new(Vec3{x: -0.5, y: 0.0, z: -1.0}, 0.5, Box::new(material::Metal{albedo: Color{r: 0.2, g: 0.9, b: 0.3}, roughness: 0.2})));
     world.add(Sphere::new(Vec3{x: 0.0, y: -100.5, z: -1.0}, 100.0, Box::new(material::Lambertian{albedo: Color{r: 0.6, g: 0.6, b: 0.6}})));
 
