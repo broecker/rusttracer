@@ -28,6 +28,7 @@ pub trait Intersectable {
 pub struct Sphere {
   center: Vec3,
   radius: f32,
+  material: Box<dyn Material>,
 }
 
 // See: https://bennetthardwick.com/blog/dont-use-boxed-trait-objects-for-struct-internals/
@@ -37,8 +38,8 @@ pub struct IntersectableList<I: Intersectable> {
 
 
 impl Sphere {
-  pub fn new(center: Vec3, radius: f32) -> Sphere {
-    Sphere{center: center, radius: radius}
+  pub fn new(center: Vec3, radius: f32, material: Box<Material>) -> Sphere {
+    Sphere{center: center, radius: radius, material: material}
   }
 }
 
@@ -88,6 +89,7 @@ impl Intersectable for Sphere {
     hit.point = ray.at(root);
     let normal = (hit.point - self.center) / self.radius;
     hit.set_face_normal(ray, normal);
+    hit.material = self.material.clone();
     true
   }
 }

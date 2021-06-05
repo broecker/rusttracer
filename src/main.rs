@@ -36,10 +36,20 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: u32) -> Color 
   }
 
   if world.intersect(ray, 0.0001, 10000.0, &mut hit_record) {
-    let target = hit_record.point + hit_record.normal + Vec3::random_in_unit_sphere().normalized();
-    return ray_color(&Ray{origin: hit_record.point, direction: target - hit_record.point}, world, depth-1) * 0.5
+    let mut scattered = Ray{origin: Vec3::zero(), direction: Vec3::zero()};
+    let mut attenuation = Color::black();
+
+    if hit_record.material.scatter(ray, &hit_record, &mut attenuation, &mut scattered) {
+      return attenuation * ray_color(&scattered, &world, depth-1)
+    }
+
+    return Color::black()
+
+    //let target = hit_record.point + hit_record.normal + Vec3::random_in_unit_sphere().normalized();
+    //return ray_color(&Ray{origin: hit_record.point, direction: target - hit_record.point}, world, depth-1) * 0.5
   }
 
+  // Background color
   let unit_direction = ray.direction.normalized();
   let t = 0.5 * (unit_direction.y + 1.0);
   let white = Color{r: 1.0, g: 1.0, b: 1.0 };
@@ -95,13 +105,13 @@ fn main() {
     // Image
     let mut image = image::Image::new(512, 512);
 
-    let render_settings = RenderSettings{samples_per_pixel: 500, max_recursion_depth: 50, image_gamma: 2.0, render_threads: 16};
+    let render_settings = RenderSettings{samples_per_pixel: 50, max_recursion_depth: 5, image_gamma: 2.0, render_threads: 16};
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
-    world.add(Sphere::new(Vec3{x:  0.5, y: 0.0, z: -1.0}, 0.5));
-    world.add(Sphere::new(Vec3{x: -0.5, y: 0.0, z: -1.0}, 0.5));
-    world.add(Sphere::new(Vec3{x: 0.0, y: -100.5, z: -1.0}, 100.0));
+    world.add(Sphere::new(Vec3{x:  0.5, y: 0.0, z: -1.0}, 0.5, Box::new(material::Lambertian{albedo: Color{r: 0.8, g: 0.4, b: 0.5}})));
+    world.add(Sphere::new(Vec3{x: -0.5, y: 0.0, z: -1.0}, 0.5, Box::new(material::Lambertian{albedo: Color{r: 0.2, g: 0.9, b: 0.3}})));
+    world.add(Sphere::new(Vec3{x: 0.0, y: -100.5, z: -1.0}, 100.0, Box::new(material::Lambertian{albedo: Color{r: 0.6, g: 0.6, b: 0.6}})));
 
     // Camera
     let camera = Camera::new(image.aspect_ratio());
