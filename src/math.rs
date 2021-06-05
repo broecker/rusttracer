@@ -60,6 +60,10 @@ impl Vec3 {
     a.x*b.x + a.y*b.y + a.z*b.z
   }
 
+  pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    return *v - *n * Vec3::dot(v, n) * 2.0
+  }
+
   pub fn zero() -> Vec3 {
     Vec3{x: 0.0, y: 0.0, z: 0.0}
   }

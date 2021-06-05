@@ -38,7 +38,7 @@ pub struct IntersectableList<I: Intersectable> {
 
 
 impl Sphere {
-  pub fn new(center: Vec3, radius: f32, material: Box<Material>) -> Sphere {
+  pub fn new(center: Vec3, radius: f32, material: Box<dyn Material>) -> Sphere {
     Sphere{center: center, radius: radius, material: material}
   }
 }
