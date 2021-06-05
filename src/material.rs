@@ -27,6 +27,7 @@ pub struct Lambertian {
 #[derive(Clone, Copy)]
 pub struct Metal {
   pub albedo: Color,
+  pub roughness: f32,
 }
 
 fn get_scatter_direction(normal: Vec3) -> Vec3 {
@@ -70,7 +71,7 @@ impl Material for Metal {
   fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
     let reflected = Vec3::reflect(&ray_in.direction.normalized(), &hit.normal);
     scattered.origin = hit.point;
-    scattered.direction = reflected;
+    scattered.direction = reflected + Vec3::random_in_unit_sphere() * self.roughness;
     *attenuation = self.albedo;
     Vec3::dot(&scattered.direction, &hit.normal) > 0.0
   }
