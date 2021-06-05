@@ -1,8 +1,11 @@
 
+use crate::math::Color;
 use crate::math::Ray;
 use crate::math::Vec3;
+use crate::material::Material;
+use crate::material::Constant;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct HitRecord {
   // Intersection point in world coordinates.
   pub point: Vec3,
@@ -12,6 +15,9 @@ pub struct HitRecord {
   pub t: f32,
   // Set to true if the ray hit the front facing.
   pub front_face: bool,
+  
+  pub material: Box<dyn Material>,
+
 }
 
 // All the objects we can intersect.
@@ -43,6 +49,7 @@ impl HitRecord {
       normal: Vec3::zero(),
       t: 0.0,
       front_face: false,
+      material: Box::new(Constant{color: Color{r: 1.0, g: 0.0, b: 1.0}}),
     }
   }
 
@@ -104,7 +111,7 @@ impl<I:Intersectable> Intersectable for IntersectableList<I> {
       if obj.intersect(&ray, t_min, closest, &mut record) {
         any_hit = true;
         closest = record.t;
-        *hit = record;
+        *hit = record.clone();
       }
     }
     any_hit
