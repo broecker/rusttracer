@@ -3,6 +3,7 @@ mod image;
 mod intersection;
 mod material;
 mod math;
+mod scene;
 
 use math::Color;
 use math::Ray;
@@ -10,7 +11,6 @@ use math::Vec3;
 
 use rand::Rng;
 
-use std::sync::Arc;
 
 use crate::intersection::Intersectable;
 use crate::intersection::IntersectableList;
@@ -93,7 +93,6 @@ fn trace(
                 let mut rng = rand::thread_rng();
 
                 for j in 0..tile.image.height() {
-                    print!(".");
                     for i in 0..tile.image.width() {
                         let mut color = Color {
                             r: 0.0,
@@ -134,84 +133,23 @@ fn main() {
     let mut image = image::Image::new(1024, 1024);
 
     let render_settings = RenderSettings {
-        samples_per_pixel: 50,
-        max_recursion_depth: 12,
+        samples_per_pixel: 2000,
+        max_recursion_depth: 25,
         image_gamma: 2.0,
-        render_threads: 16,
+        render_threads: 12,
     };
 
     // World
-    let mut world = IntersectableList::<Sphere>::new();
-    world.add(Sphere::new(
-        Vec3 {
-            x: -0.5,
-            y: 0.0,
-            z: -1.0,
-        },
-        0.25,
-        Arc::new(material::Dielectric {
-            index_of_refraction: 1.5,
-        }),
-    ));
-    world.add(Sphere::new(
-        Vec3 {
-            x: -0.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        0.25,
-        Arc::new(material::Lambertian {
-            albedo: Color {
-                r: 0.1,
-                g: 0.2,
-                b: 0.5,
-            },
-        }),
-    ));
-    world.add(Sphere::new(
-        Vec3 {
-            x: 0.5,
-            y: 0.0,
-            z: -1.0,
-        },
-        0.25,
-        Arc::new(material::Metal {
-            albedo: Color {
-                r: 0.8,
-                g: 0.6,
-                b: 0.2,
-            },
-            roughness: 0.1,
-        }),
-    ));
-    world.add(Sphere::new(
-        Vec3 {
-            x: 0.0,
-            y: -100.25,
-            z: -1.0,
-        },
-        100.0,
-        Arc::new(material::Lambertian {
-            albedo: Color {
-                r: 0.8,
-                g: 0.8,
-                b: 0.3,
-            },
-        }),
-    ));
+    let world = scene::make_random_sphere_scene();
 
     // Camera
     let camera = Camera::new(
         Vec3 {
-            x: -2.0,
+            x: 13.0,
             y: 2.0,
-            z: 1.0,
+            z: 3.0,
         },
-        Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: -1.0,
-        },
+        Vec3::zero(),
         Vec3::up(),
         60.0,
         image.aspect_ratio(),

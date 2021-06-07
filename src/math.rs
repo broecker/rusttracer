@@ -54,6 +54,17 @@ impl Color {
             b: 1.0,
         }
     }
+
+    pub fn random() -> Color {
+        let mut rng = rand::thread_rng();
+        let r = rng.gen_range(0.0..1.0);
+        let g = rng.gen_range(0.0..1.0);
+        Color {
+            r: r,
+            g: g,
+            b: 1.0 - r - g,
+        }
+    }
 }
 
 impl Vec3 {
@@ -104,7 +115,7 @@ impl Vec3 {
         Vec3 {
             x: 0.0,
             y: 1.0,
-            z: 0.0
+            z: 0.0,
         }
     }
 

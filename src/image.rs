@@ -11,6 +11,7 @@ pub struct Image {
 pub struct Tile {
     pub x: u32,
     pub y: u32,
+    pub id: u32,
     pub image: Image,
 }
 
@@ -30,6 +31,7 @@ impl Image {
         let mut tile = Tile {
             x: x,
             y: y,
+            id: 0,
             image: Image::new(width, height),
         };
         for u in 0..width as u32 {
@@ -49,7 +51,9 @@ impl Image {
         let mut tiles = vec![];
         for u in 0..tiles_w {
             for v in 0..tiles_h {
-                tiles.push(self.get_tile((u * size_w) as u32, (v * size_h) as u32, size_w, size_h));
+                let mut tile = self.get_tile((u * size_w) as u32, (v * size_h) as u32, size_w, size_h);
+                tile.id = (u + v*tiles_w) as u32;
+                tiles.push(tile);
             }
         }
         tiles
