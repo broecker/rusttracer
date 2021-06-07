@@ -5,6 +5,8 @@ use crate::math::Color;
 use crate::math::Ray;
 use crate::math::Vec3;
 
+use rand::Rng;
+
 pub trait Material: MaterialClone + Send + Sync {
   fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
 }
@@ -82,6 +84,15 @@ impl Material for Metal {
   }
 }
 
+impl Dielectric {
+  fn reflectance(cosine: f32, ref_index: f32) -> f32 {
+    // Schlick's reflectance approximation.
+    let mut r0 = (1.0 - ref_index) / (1.0 + ref_index);
+    r0 = r0*r0;
+    r0 + (1.0-r0)*(1.0-cosine).powf(5.0)
+  }
+}
+
 impl Material for Dielectric {
   fn scatter(&self, ray_in: &Ray, hit: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
     *attenuation = Color::white();
@@ -93,7 +104,8 @@ impl Material for Dielectric {
 
     let cannot_refract = (refraction_ratio * sin_theta) > 1.0;
 
-    let direction = if cannot_refract { Vec3::reflect(&unit_direction, &hit.normal) } else { Vec3::refract(&unit_direction, &hit.normal, refraction_ratio) };
+    let mut rng = rand::thread_rng();
+    let direction = if cannot_refract || Dielectric::reflectance(cos_theta, refraction_ratio) > rng.gen_range(0.0..1.0) { Vec3::reflect(&unit_direction, &hit.normal) } else { Vec3::refract(&unit_direction, &hit.normal, refraction_ratio) };
 
     scattered.origin = hit.point;
     scattered.direction = direction;
