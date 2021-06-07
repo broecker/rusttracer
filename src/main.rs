@@ -11,6 +11,8 @@ use math::Vec3;
 
 use rand::Rng;
 
+use std::sync::Arc;
+
 use intersection::HitRecord;
 use intersection::Sphere;
 use crate::intersection::Intersectable;
@@ -103,15 +105,16 @@ fn trace(image: &mut image::Image, camera: &Camera, world: &IntersectableList<Sp
 
 fn main() {
     // Image
-    let mut image = image::Image::new(512, 512);
+    let mut image = image::Image::new(1024, 1024);
 
-    let render_settings = RenderSettings{samples_per_pixel: 1000, max_recursion_depth: 8, image_gamma: 2.0, render_threads: 16};
+    let render_settings = RenderSettings{samples_per_pixel: 500, max_recursion_depth: 12, image_gamma: 2.0, render_threads: 16};
 
     // World
     let mut world = IntersectableList::<Sphere>::new();
-    world.add(Sphere::new(Vec3{x:  0.5, y: 0.0, z: -1.0}, 0.5, Box::new(material::Dielectric{index_of_refraction: 0.5})));
-    world.add(Sphere::new(Vec3{x: -0.5, y: 0.0, z: -1.0}, 0.5, Box::new(material::Metal{albedo: Color{r: 0.2, g: 0.9, b: 0.3}, roughness: 0.2})));
-    world.add(Sphere::new(Vec3{x: 0.0, y: -100.5, z: -1.0}, 100.0, Box::new(material::Lambertian{albedo: Color{r: 0.6, g: 0.6, b: 0.6}})));
+    world.add(Sphere::new(Vec3{x: -0.5, y: 0.0, z: -1.0}, 0.25, Arc::new(material::Dielectric{index_of_refraction: 1.5})));
+    world.add(Sphere::new(Vec3{x: -0.0, y: 0.0, z: -1.0}, 0.25, Arc::new(material::Lambertian{albedo: Color{r: 0.1, g: 0.2, b: 0.5}})));
+    world.add(Sphere::new(Vec3{x:  0.5, y: 0.0, z: -1.0}, 0.25, Arc::new(material::Metal{albedo: Color{r: 0.8, g: 0.6, b: 0.2}, roughness: 0.1})));
+    world.add(Sphere::new(Vec3{x: 0.0, y: -100.25, z: -1.0}, 100.0, Arc::new(material::Lambertian{albedo: Color{r: 0.8, g: 0.8, b: 0.3}})));
 
     // Camera
     let camera = Camera::new(image.aspect_ratio());

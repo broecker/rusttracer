@@ -5,6 +5,8 @@ use crate::math::Vec3;
 use crate::material::Material;
 use crate::material::Constant;
 
+use std::sync::Arc;
+
 #[derive(Clone)]
 pub struct HitRecord {
   // Intersection point in world coordinates.
@@ -16,7 +18,7 @@ pub struct HitRecord {
   // Set to true if the ray hit the front facing.
   pub front_face: bool,
   
-  pub material: Box<dyn Material>,
+  pub material: Arc<dyn Material>,
 
 }
 
@@ -28,7 +30,7 @@ pub trait Intersectable {
 pub struct Sphere {
   center: Vec3,
   radius: f32,
-  material: Box<dyn Material>,
+  material: Arc<dyn Material>,
 }
 
 // See: https://bennetthardwick.com/blog/dont-use-boxed-trait-objects-for-struct-internals/
@@ -38,7 +40,7 @@ pub struct IntersectableList<I: Intersectable> {
 
 
 impl Sphere {
-  pub fn new(center: Vec3, radius: f32, material: Box<dyn Material>) -> Sphere {
+  pub fn new(center: Vec3, radius: f32, material: Arc<dyn Material>) -> Sphere {
     Sphere{center: center, radius: radius, material: material}
   }
 }
@@ -50,7 +52,7 @@ impl HitRecord {
       normal: Vec3::zero(),
       t: 0.0,
       front_face: false,
-      material: Box::new(Constant{color: Color{r: 1.0, g: 0.0, b: 1.0}}),
+      material: Arc::new(Constant{color: Color{r: 1.0, g: 0.0, b: 1.0}}),
     }
   }
 

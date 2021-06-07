@@ -87,9 +87,16 @@ impl Material for Dielectric {
     *attenuation = Color::white();
     let refraction_ratio = if hit.front_face { 1.0 / self.index_of_refraction } else { self.index_of_refraction };
     let unit_direction = ray_in.direction.normalized();
-    let refracted = Vec3::refract(&unit_direction, &hit.normal, refraction_ratio);
+
+    let cos_theta = Vec3::dot(&(unit_direction * -1.0), &hit.normal).min(1.0);
+    let sin_theta = (1.0 - cos_theta*cos_theta).sqrt();
+
+    let cannot_refract = (refraction_ratio * sin_theta) > 1.0;
+
+    let direction = if cannot_refract { Vec3::reflect(&unit_direction, &hit.normal) } else { Vec3::refract(&unit_direction, &hit.normal, refraction_ratio) };
+
     scattered.origin = hit.point;
-    scattered.direction = refracted;
+    scattered.direction = direction;
     true
   }
 }
