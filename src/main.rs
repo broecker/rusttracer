@@ -134,7 +134,7 @@ fn main() {
     let mut image = image::Image::new(1024, 1024);
 
     let render_settings = RenderSettings {
-        samples_per_pixel: 500,
+        samples_per_pixel: 50,
         max_recursion_depth: 12,
         image_gamma: 2.0,
         render_threads: 16,
@@ -201,7 +201,21 @@ fn main() {
     ));
 
     // Camera
-    let camera = Camera::new(image.aspect_ratio());
+    let camera = Camera::new(
+        Vec3 {
+            x: -2.0,
+            y: 2.0,
+            z: 1.0,
+        },
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        Vec3::up(),
+        60.0,
+        image.aspect_ratio(),
+    );
 
     trace(&mut image, &camera, &world, &render_settings);
 

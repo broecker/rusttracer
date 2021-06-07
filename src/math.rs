@@ -73,6 +73,14 @@ impl Vec3 {
         a.x * b.x + a.y * b.y + a.z * b.z
     }
 
+    pub fn cross(a: &Vec3, b: &Vec3) -> Vec3 {
+        Vec3 {
+            x: a.y * b.z - a.z * b.y,
+            y: a.z * b.x - a.x * b.z,
+            z: a.x * b.y - a.y * b.x,
+        }
+    }
+
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
         return *v - *n * Vec3::dot(v, n) * 2.0;
     }
@@ -89,6 +97,14 @@ impl Vec3 {
             x: 0.0,
             y: 0.0,
             z: 0.0,
+        }
+    }
+
+    pub fn up() -> Vec3 {
+        Vec3 {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0
         }
     }
 
