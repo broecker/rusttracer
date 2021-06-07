@@ -31,6 +31,13 @@ pub struct Sphere {
     material: Arc<dyn Material>,
 }
 
+pub struct Triangle {
+    pub a: Vec3,
+    pub b: Vec3,
+    pub c: Vec3,
+    material: Arc<dyn Material>,
+}
+
 // See: https://bennetthardwick.com/blog/dont-use-boxed-trait-objects-for-struct-internals/
 pub struct IntersectableList<I: Intersectable> {
     objects: Vec<I>,
@@ -99,6 +106,63 @@ impl Intersectable for Sphere {
         let normal = (hit.point - self.center) / self.radius;
         hit.set_face_normal(ray, normal);
         hit.material = self.material.clone();
+        true
+    }
+}
+
+impl Triangle {
+    pub fn normal(&self) -> Vec3 {
+        let u = (self.b - self.a).normalized();
+        let v = (self.c - self.a).normalized();
+        Vec3::cross(&u, &v)
+    }
+}
+
+impl Intersectable for Triangle {
+    fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool {
+        let u = self.b - self.a;
+        let v = self.c - self.a;
+        let n = Vec3::cross(&u, &v);
+
+        // Step 1 -- find intersection point.
+        // Check if plane and ray are parallel.
+        let n_dot_ray_dir = Vec3::dot(&n, &ray.direction);
+        if n_dot_ray_dir.abs() < f32::EPSILON {
+            return false;
+        }
+
+        let d = Vec3::dot(&n, &self.a);
+        // Check if t is within valid bounds.
+        let t = (Vec3::dot(&n, &ray.origin) + d) / n_dot_ray_dir;
+        if t < t_min || t > t_max {
+            return false;
+        }
+
+        // Calculate intersection point.
+        let point = ray.origin + ray.direction * t;
+
+        // Step 2 -- inside-out test.
+        let c = Vec3::cross(&n, &(point - u));
+        if Vec3::dot(&n, &c) < 0.0 {
+            return false;
+        }
+
+        let c = Vec3::cross(&n, &(point - v));
+        if Vec3::dot(&n, &c) < 0.0 {
+            return false;
+        }
+
+        let c = Vec3::cross(&n, &(point - self.a - self.c));
+        if Vec3::dot(&n, &c) < 0.0 {
+            return false;
+        }
+
+        hit.t = t;
+        hit.front_face = Vec3::dot(&hit.normal, &ray.direction) < 0.0;
+        hit.point = point;
+        hit.set_face_normal(ray, self.normal());
+        hit.material = self.material.clone();
+
         true
     }
 }
