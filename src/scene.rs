@@ -14,23 +14,6 @@ pub fn make_random_sphere_scene() -> IntersectableList<Sphere> {
     let mut rng = rand::thread_rng();
     let mut world = IntersectableList::new();
 
-    // Ground sphere.
-    world.add(Sphere::new(
-        Vec3 {
-            x: 0.0,
-            y: -1000.0,
-            z: 0.0,
-        },
-        1000.0,
-        Arc::new(material::Lambertian {
-            albedo: Color {
-                r: 0.8,
-                g: 0.8,
-                b: 0.3,
-            },
-        }),
-    ));
-
     let material_glass = Arc::new(material::Dielectric {
         index_of_refraction: 1.5,
     });

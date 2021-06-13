@@ -35,7 +35,7 @@ pub struct Triangle {
     pub a: Vec3,
     pub b: Vec3,
     pub c: Vec3,
-    material: Arc<dyn Material>,
+    pub material: Arc<dyn Material>,
 }
 
 // See: https://bennetthardwick.com/blog/dont-use-boxed-trait-objects-for-struct-internals/
@@ -120,46 +120,40 @@ impl Triangle {
 
 impl Intersectable for Triangle {
     fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool {
-        let u = self.b - self.a;
-        let v = self.c - self.a;
-        let n = Vec3::cross(&u, &v);
+        let e1 = self.b - self.a;
+        let e2 = self.c - self.a;
+        let p_vec = Vec3::cross(&ray.direction, &e2);
+        let det = Vec3::dot(&e1, &p_vec);
 
-        // Step 1 -- find intersection point.
-        // Check if plane and ray are parallel.
-        let n_dot_ray_dir = Vec3::dot(&n, &ray.direction);
-        if n_dot_ray_dir.abs() < f32::EPSILON {
+        // Ray and triangle are parallel if close to 0.
+        if det.abs() < f32::EPSILON {
             return false;
         }
 
-        let d = Vec3::dot(&n, &self.a);
-        // Check if t is within valid bounds.
-        let t = (Vec3::dot(&n, &ray.origin) + d) / n_dot_ray_dir;
+        let inv_det = 1.0 / det;
+        let t_vec = ray.origin - self.a;
+
+        // Barycentric coord u.
+        let u = Vec3::dot(&t_vec, &p_vec) * inv_det;
+        if u < 0.0 || u > 1.0 {
+            return false;
+        }
+
+        // Barycentric coord v.
+        let q_vec = Vec3::cross(&t_vec, &e1);
+        let v = Vec3::dot(&ray.direction, &q_vec) * inv_det;
+        if v < 0.0 || v > 1.0 {
+            return false;
+        }
+
+        let t = Vec3::dot(&e2, &q_vec) * inv_det;
         if t < t_min || t > t_max {
-            return false;
-        }
+            return false;        }
 
-        // Calculate intersection point.
-        let point = ray.origin + ray.direction * t;
-
-        // Step 2 -- inside-out test.
-        let c = Vec3::cross(&n, &(point - u));
-        if Vec3::dot(&n, &c) < 0.0 {
-            return false;
-        }
-
-        let c = Vec3::cross(&n, &(point - v));
-        if Vec3::dot(&n, &c) < 0.0 {
-            return false;
-        }
-
-        let c = Vec3::cross(&n, &(point - self.a - self.c));
-        if Vec3::dot(&n, &c) < 0.0 {
-            return false;
-        }
 
         hit.t = t;
         hit.front_face = Vec3::dot(&hit.normal, &ray.direction) < 0.0;
-        hit.point = point;
+        hit.point = ray.origin + ray.direction * hit.t;
         hit.set_face_normal(ray, self.normal());
         hit.material = self.material.clone();
 

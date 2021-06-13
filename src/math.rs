@@ -55,6 +55,14 @@ impl Color {
         }
     }
 
+    pub fn gray(value: f32) -> Color {
+        Color { 
+            r: value,
+            g: value,
+            b: value
+        }
+    }
+
     pub fn random() -> Color {
         let mut rng = rand::thread_rng();
         let r = rng.gen_range(0.0..1.0);

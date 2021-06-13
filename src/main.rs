@@ -11,12 +11,12 @@ use math::Vec3;
 
 use rand::Rng;
 
-
 use crate::intersection::Intersectable;
 use crate::intersection::IntersectableList;
 use camera::Camera;
-use intersection::HitRecord;
-use intersection::Sphere;
+use intersection::{HitRecord, Sphere, Triangle};
+
+use std::sync::Arc;
 
 extern crate scoped_threadpool;
 use scoped_threadpool::Pool;
@@ -28,14 +28,21 @@ struct RenderSettings {
     render_threads: u32,
 }
 
-fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: u32) -> Color {
+fn ray_color(
+    ray: &Ray,
+    spheres: &IntersectableList<Sphere>,
+    triangles: &IntersectableList<Triangle>,
+    depth: u32,
+) -> Color {
     let mut hit_record = HitRecord::new();
 
     if depth <= 0 {
         return Color::black();
     }
 
-    if world.intersect(ray, 0.0001, 10000.0, &mut hit_record) {
+    if spheres.intersect(ray, 0.0001, 10000.0, &mut hit_record)
+        || triangles.intersect(ray, 0.001, 10000.0, &mut hit_record)
+    {
         let mut scattered = Ray {
             origin: Vec3::zero(),
             direction: Vec3::zero(),
@@ -46,13 +53,10 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: u32) -> Color 
             .material
             .scatter(ray, &hit_record, &mut attenuation, &mut scattered)
         {
-            return attenuation * ray_color(&scattered, &world, depth - 1);
+            return attenuation * ray_color(&scattered, &spheres, triangles, depth - 1);
         }
 
         return Color::black();
-
-        //let target = hit_record.point + hit_record.normal + Vec3::random_in_unit_sphere().normalized();
-        //return ray_color(&Ray{origin: hit_record.point, direction: target - hit_record.point}, world, depth-1) * 0.5
     }
 
     // Background color
@@ -75,7 +79,8 @@ fn ray_color(ray: &Ray, world: &IntersectableList<Sphere>, depth: u32) -> Color 
 fn trace(
     image: &mut image::Image,
     camera: &Camera,
-    world: &IntersectableList<Sphere>,
+    spheres: &IntersectableList<Sphere>,
+    triangles: &IntersectableList<Triangle>,
     render_settings: &RenderSettings,
 ) {
     let image_w = image.width();
@@ -109,7 +114,12 @@ fn trace(
                                     / (image_h as f32 - 1.0);
 
                             let ray = camera.get_ray(u, v);
-                            color += ray_color(&ray, &world, render_settings.max_recursion_depth);
+                            color += ray_color(
+                                &ray,
+                                &spheres,
+                                &triangles,
+                                render_settings.max_recursion_depth,
+                            );
                         }
 
                         tile.image.put_pixel(
@@ -133,14 +143,54 @@ fn main() {
     let mut image = image::Image::new(1024, 1024);
 
     let render_settings = RenderSettings {
-        samples_per_pixel: 2000,
-        max_recursion_depth: 25,
+        samples_per_pixel: 20,
+        max_recursion_depth: 5,
         image_gamma: 2.0,
         render_threads: 12,
     };
 
     // World
-    let world = scene::make_random_sphere_scene();
+    let spheres = scene::make_random_sphere_scene();
+    let mut triangles = IntersectableList::new();
+
+    let triangle_mat = Arc::new(material::Lambertian {
+        albedo: Color::gray(0.4),
+    });
+
+    let a = Vec3 {
+        x: -100.0,
+        y: 0.0,
+        z: -100.0,
+    };
+    let b = Vec3 {
+        x: -100.0,
+        y: 0.0,
+        z: 100.0,
+    };
+    let c = Vec3 {
+        x: 100.0,
+        y: 0.0,
+        z: 100.0,
+    };
+    let d = Vec3 {
+        x: 100.0,
+        y: 0.0,
+        z: -100.0,
+    };
+
+    triangles.add(Triangle {
+        a: a, 
+        b: b,
+        c: d,
+        material: triangle_mat.clone(),
+    });
+
+    triangles.add(Triangle {
+        a: b,
+        b: c,
+        c: d,
+        material: triangle_mat.clone(),
+    });
 
     // Camera
     let camera = Camera::new(
@@ -155,7 +205,7 @@ fn main() {
         image.aspect_ratio(),
     );
 
-    trace(&mut image, &camera, &world, &render_settings);
+    trace(&mut image, &camera, &spheres, &triangles, &render_settings);
 
     // File output.
     image.gamma_correct(render_settings.image_gamma);
