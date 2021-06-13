@@ -135,7 +135,7 @@ fn main() {
     let mut image = image::Image::new(512, 512);
 
     let render_settings = RenderSettings {
-        samples_per_pixel: 50,
+        samples_per_pixel: 1,
         max_recursion_depth: 5,
         image_gamma: 2.0,
         render_threads: 12,
@@ -144,6 +144,9 @@ fn main() {
     // World
     let mut world = scene::make_random_sphere_scene();
     world.join(scene::make_ground());
+    //world.join(scene::load_ply(String::from("./data/bun_zipper.ply")));
+
+    world = scene::load_ply(String::from("./data/bun_zipper.ply"));
 
     // Camera
     let camera = Camera::new(

@@ -1,6 +1,8 @@
 use crate::math::Color;
 use crate::math::Vec3;
 
+use ply_rs::{parser, ply};
+
 use rand::Rng;
 
 use std::sync::Arc;
@@ -103,3 +105,59 @@ pub fn make_ground() -> Intersectables {
     triangles 
 }
 
+pub fn load_ply(filename: String) -> Intersectables {
+    println!("Reading ply model {}", filename);
+
+    let mut buf_read = std::io::BufReader::new(std::fs::File::open(filename).unwrap());
+    let parser = parser::Parser::<ply::DefaultElement>::new();
+
+    let header = parser.read_header(&mut buf_read).unwrap();
+    let vertex_count = header.elements["vertex"].count;
+    println!("Vertex count: {}", vertex_count);
+    let face_count = header.elements["face"].count;
+    println!("Face count: {}", face_count);
+
+    let payload = parser.read_payload(&mut buf_read, &header).unwrap();
+
+    // Read all vertices.
+    let mut vertices = Vec::<Vec3>::new();   
+    for v in 0..vertex_count {
+        let x = match payload["vertex"][v]["x"] {
+            ply::Property::Float(f) => f,
+            _ => panic!("Not supported"),
+        };
+        let y = match payload["vertex"][v]["y"] {
+            ply::Property::Float(f) => f,
+            _ => panic!("Not supported"),
+        };
+        let z = match payload["vertex"][v]["z"] {
+            ply::Property::Float(f) => f,
+            _ => panic!("Not supported"),
+        };
+        vertices.push(Vec3{x: x, y: y, z: z});
+    }
+
+    let mut model = Intersectables::new();
+
+    for face_id in 0..face_count {
+        let v = match &payload["face"][face_id]["vertex_indices"] {
+            ply::Property::ListInt(f) => f,
+            _ => panic!("Not supported"),
+
+        };
+
+        assert!(v.len() == 3);
+        let tri = Triangle{
+            a: vertices[v[0] as usize],
+            b: vertices[v[1] as usize],
+            c: vertices[v[2] as usize],
+            material: Arc::new(material::Lambertian {
+                albedo: Color::random(),
+            }),
+        };
+
+        model.add(Box::new(tri));
+    }
+
+    model
+}
