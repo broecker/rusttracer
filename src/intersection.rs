@@ -3,6 +3,7 @@ use crate::material::Material;
 use crate::math::Color;
 use crate::math::Ray;
 use crate::math::Vec3;
+use crate::bounds::AABB;
 
 use std::sync::Arc;
 
@@ -23,6 +24,8 @@ pub struct HitRecord {
 // All the objects we can intersect.
 pub trait Intersectable : Sync {
     fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool;
+
+    fn get_aabb(&self) -> AABB;
 }
 
 pub struct Sphere {
@@ -55,6 +58,14 @@ impl Intersectable for Intersectables {
             }
         }
         any_hit
+    }
+
+    fn get_aabb(&self) -> AABB {
+        let mut bbox = AABB::new();
+        for obj in self.objects.iter() {
+            bbox.add_bbox(&obj.get_aabb());            
+        }
+        bbox
     }
 }
 
@@ -141,6 +152,13 @@ impl Intersectable for Sphere {
         hit.material = self.material.clone();
         true
     }
+
+    fn get_aabb(&self) -> AABB {
+        let mut bbox = AABB::new();
+        bbox.add_point(&self.center);
+        bbox.add_point(&Vec3{x: self.center.x + self.radius, y: 0.0, z: 0.0});
+        bbox
+    }
 }
 
 impl Triangle {
@@ -191,5 +209,13 @@ impl Intersectable for Triangle {
         hit.material = self.material.clone();
 
         true
+    }
+
+    fn get_aabb(&self) -> AABB {
+        let mut bbox = AABB::new();
+        bbox.add_point(&self.a);
+        bbox.add_point(&self.b);
+        bbox.add_point(&self.c);
+        bbox
     }
 }

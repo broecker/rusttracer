@@ -1,3 +1,4 @@
+mod bounds;
 mod camera;
 mod image;
 mod intersection;
@@ -147,6 +148,11 @@ fn main() {
     //world.join(scene::load_ply(String::from("./data/bun_zipper.ply")));
 
     world = scene::load_ply(String::from("./data/bun_zipper.ply"));
+    let bbox = world.get_aabb();
+    println!("World {:?} -> {:?}", bbox.min, bbox.max);
+
+
+
 
     // Camera
     let camera = Camera::new(
