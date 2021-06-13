@@ -26,6 +26,11 @@ pub trait Intersectable : Sync {
     fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool;
 
     fn get_aabb(&self) -> AABB;
+
+    // Note: the following are helper methods and should be moved into another trait.
+    fn scale(&mut self, scale: f32);
+
+    fn translate(&mut self, delta: &Vec3);
 }
 
 pub struct Sphere {
@@ -67,6 +72,18 @@ impl Intersectable for Intersectables {
         }
         bbox
     }
+
+    fn scale(&mut self, scale: f32) {
+        for i in 0..self.objects.len() {
+            self.objects[i].scale(scale);
+        }        
+    }
+
+    fn translate(&mut self, delta: &Vec3) {
+        for i in 0..self.objects.len() {
+            self.objects[i].translate(&delta);
+        }        
+    }
 }
 
 impl Intersectables {
@@ -83,6 +100,15 @@ impl Intersectables {
     pub fn join(&mut self, other: Intersectables) {
         for obj in other.objects {
             self.add(obj);
+        }
+    }
+
+    pub fn center_on_origin(&mut self) {
+        let bbox = self.get_aabb();
+        let delta = bbox.center() * -1.0;
+
+        for i in 0..self.objects.len() {
+            self.objects[i].translate(&delta);
         }
     }
 }
@@ -158,6 +184,14 @@ impl Intersectable for Sphere {
         bbox.add_sphere(&self.center, self.radius);        
         bbox
     }
+
+    fn scale(&mut self, scale: f32) {
+        self.radius *= scale;
+    }
+
+    fn translate(&mut self, delta: &Vec3) {
+        self.center += *delta;
+    }
 }
 
 impl Triangle {
@@ -216,5 +250,18 @@ impl Intersectable for Triangle {
         bbox.add_point(&self.b);
         bbox.add_point(&self.c);
         bbox
+    }
+
+    fn scale(&mut self, scale: f32) {
+        self.a = self.a * scale;
+        self.b = self.b * scale;
+        self.c = self.c * scale;
+
+    }
+
+    fn translate(&mut self, delta: &Vec3) {
+        self.a += *delta;
+        self.b += *delta;
+        self.c += *delta;
     }
 }

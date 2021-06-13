@@ -134,7 +134,7 @@ pub fn load_ply(filename: String) -> Intersectables {
             ply::Property::Float(f) => f,
             _ => panic!("Not supported"),
         };
-        vertices.push(Vec3{x: x * 100.0 - 30.0, y: y * 100.0 - 30.0, z: z * 100.0 - 30.0});
+        vertices.push(Vec3{x: x, y: y, z: z});
     }
 
     let mut model = Intersectables::new();

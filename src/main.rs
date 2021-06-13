@@ -143,16 +143,20 @@ fn main() {
     };
 
     // World
-    let world = scene::load_ply(String::from("./data/bun_zipper.ply"));
+    let mut world = scene::load_ply(String::from("./data/bun_zipper.ply"));
+    world.center_on_origin();
+    world.scale(50.0);
     let bbox = world.get_aabb();
-    println!("World {:?} -> {:?}", bbox.min, bbox.max);
+    // Place on ground plane.
+    world.translate(&Vec3{x:0.0, y:bbox.extend().y / 2.0, z:0.0});
+    world.add(Box::new(scene::make_ground()));
 
     // Camera
     let camera = Camera::new(
         Vec3 {
-            x: 13.0,
-            y: 2.0,
-            z: 3.0,
+            x: -13.0,
+            y: bbox.extend().y,
+            z: -3.0,
         },
         Vec3::zero(),
         Vec3::up(),
