@@ -105,7 +105,7 @@ pub fn make_ground() -> Intersectables {
     triangles 
 }
 
-pub fn load_ply(filename: String) -> Intersectables {
+pub fn load_ply(filename: String, material: Arc<dyn material::Material>) -> Intersectables {
     println!("Reading ply model {}", filename);
 
     let mut buf_read = std::io::BufReader::new(std::fs::File::open(filename).unwrap());
@@ -151,9 +151,7 @@ pub fn load_ply(filename: String) -> Intersectables {
             a: vertices[v[0] as usize],
             b: vertices[v[1] as usize],
             c: vertices[v[2] as usize],
-            material: Arc::new(material::Lambertian {
-                albedo: Color::random(),
-            }),
+            material: material.clone(),
         };
 
         model.add(Box::new(tri));

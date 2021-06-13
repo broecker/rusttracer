@@ -12,6 +12,8 @@ use math::Vec3;
 
 use rand::Rng;
 
+use std::sync::Arc;
+
 use crate::intersection::{Intersectable, Intersectables};
 use camera::Camera;
 use intersection::HitRecord;
@@ -136,14 +138,15 @@ fn main() {
     let mut image = image::Image::new(512, 512);
 
     let render_settings = RenderSettings {
-        samples_per_pixel: 1,
-        max_recursion_depth: 5,
+        samples_per_pixel: 1000,
+        max_recursion_depth: 10,
         image_gamma: 2.0,
         render_threads: 12,
     };
 
     // World
-    let mut world = scene::load_ply(String::from("./data/bun_zipper.ply"));
+    let bunny_mat = material::Metal{albedo: Color::random(), roughness: 0.1 };
+    let mut world = scene::load_ply(String::from("./data/bun_zipper.ply"), Arc::new(bunny_mat));
     world.center_on_origin();
     world.scale(50.0);
     let bbox = world.get_aabb();
@@ -158,7 +161,11 @@ fn main() {
             y: bbox.extend().y,
             z: -3.0,
         },
-        Vec3::zero(),
+        Vec3 {
+            x: 0.0,
+            y: bbox.extend().y / 2.0,
+            z: 0.0,
+        },
         Vec3::up(),
         60.0,
         image.aspect_ratio(),
