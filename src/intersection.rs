@@ -21,7 +21,7 @@ pub struct HitRecord {
 }
 
 // All the objects we can intersect.
-pub trait Intersectable {
+pub trait Intersectable : Sync {
     fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool;
 }
 
@@ -38,9 +38,42 @@ pub struct Triangle {
     pub material: Arc<dyn Material>,
 }
 
-// See: https://bennetthardwick.com/blog/dont-use-boxed-trait-objects-for-struct-internals/
-pub struct IntersectableList<I: Intersectable> {
-    objects: Vec<I>,
+pub struct Intersectables {
+    objects: Vec<Box<dyn Intersectable>>,
+}
+
+impl Intersectable for Intersectables {
+    fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool {
+        let mut any_hit = false;
+        let mut closest = t_max;
+        let mut record: HitRecord = HitRecord::new();
+        for obj in self.objects.iter() {
+            if obj.intersect(&ray, t_min, closest, &mut record) {
+                any_hit = true;
+                closest = record.t;
+                *hit = record.clone();
+            }
+        }
+        any_hit
+    }
+}
+
+impl Intersectables {
+    pub fn new() -> Intersectables {
+        Intersectables {
+            objects: Vec::new(),
+        }
+    }
+
+    pub fn add(&mut self, object: Box<dyn Intersectable>) {
+        self.objects.push(object)
+    }
+
+    pub fn join(&mut self, other: Intersectables) {
+        for obj in other.objects {
+            self.add(obj);
+        }
+    }
 }
 
 impl Sphere {
@@ -158,33 +191,5 @@ impl Intersectable for Triangle {
         hit.material = self.material.clone();
 
         true
-    }
-}
-
-impl<I: Intersectable> IntersectableList<I> {
-    pub fn new() -> IntersectableList<I> {
-        IntersectableList {
-            objects: Vec::new(),
-        }
-    }
-
-    pub fn add(&mut self, object: I) {
-        self.objects.push(object);
-    }
-}
-
-impl<I: Intersectable> Intersectable for IntersectableList<I> {
-    fn intersect(&self, ray: &Ray, t_min: f32, t_max: f32, hit: &mut HitRecord) -> bool {
-        let mut any_hit = false;
-        let mut closest = t_max;
-        let mut record: HitRecord = HitRecord::new();
-        for obj in self.objects.iter() {
-            if obj.intersect(&ray, t_min, closest, &mut record) {
-                any_hit = true;
-                closest = record.t;
-                *hit = record.clone();
-            }
-        }
-        any_hit
     }
 }

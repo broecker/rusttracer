@@ -11,12 +11,9 @@ use math::Vec3;
 
 use rand::Rng;
 
-use crate::intersection::Intersectable;
-use crate::intersection::IntersectableList;
+use crate::intersection::{Intersectable, Intersectables};
 use camera::Camera;
-use intersection::{HitRecord, Sphere, Triangle};
-
-use std::sync::Arc;
+use intersection::HitRecord;
 
 extern crate scoped_threadpool;
 use scoped_threadpool::Pool;
@@ -30,8 +27,7 @@ struct RenderSettings {
 
 fn ray_color(
     ray: &Ray,
-    spheres: &IntersectableList<Sphere>,
-    triangles: &IntersectableList<Triangle>,
+    world: &Intersectables,
     depth: u32,
 ) -> Color {
     let mut hit_record = HitRecord::new();
@@ -40,9 +36,7 @@ fn ray_color(
         return Color::black();
     }
 
-    if spheres.intersect(ray, 0.0001, 10000.0, &mut hit_record)
-        || triangles.intersect(ray, 0.001, 10000.0, &mut hit_record)
-    {
+    if world.intersect(ray, 0.0001, 10000.0, &mut hit_record) {
         let mut scattered = Ray {
             origin: Vec3::zero(),
             direction: Vec3::zero(),
@@ -53,7 +47,7 @@ fn ray_color(
             .material
             .scatter(ray, &hit_record, &mut attenuation, &mut scattered)
         {
-            return attenuation * ray_color(&scattered, &spheres, triangles, depth - 1);
+            return attenuation * ray_color(&scattered, &world, depth - 1);
         }
 
         return Color::black();
@@ -79,8 +73,7 @@ fn ray_color(
 fn trace(
     image: &mut image::Image,
     camera: &Camera,
-    spheres: &IntersectableList<Sphere>,
-    triangles: &IntersectableList<Triangle>,
+    world: &Intersectables,
     render_settings: &RenderSettings,
 ) {
     let image_w = image.width();
@@ -116,8 +109,7 @@ fn trace(
                             let ray = camera.get_ray(u, v);
                             color += ray_color(
                                 &ray,
-                                &spheres,
-                                &triangles,
+                                &world,
                                 render_settings.max_recursion_depth,
                             );
                         }
@@ -140,57 +132,18 @@ fn trace(
 
 fn main() {
     // Image
-    let mut image = image::Image::new(1024, 1024);
+    let mut image = image::Image::new(512, 512);
 
     let render_settings = RenderSettings {
-        samples_per_pixel: 20,
+        samples_per_pixel: 50,
         max_recursion_depth: 5,
         image_gamma: 2.0,
         render_threads: 12,
     };
 
     // World
-    let spheres = scene::make_random_sphere_scene();
-    let mut triangles = IntersectableList::new();
-
-    let triangle_mat = Arc::new(material::Lambertian {
-        albedo: Color::gray(0.4),
-    });
-
-    let a = Vec3 {
-        x: -100.0,
-        y: 0.0,
-        z: -100.0,
-    };
-    let b = Vec3 {
-        x: -100.0,
-        y: 0.0,
-        z: 100.0,
-    };
-    let c = Vec3 {
-        x: 100.0,
-        y: 0.0,
-        z: 100.0,
-    };
-    let d = Vec3 {
-        x: 100.0,
-        y: 0.0,
-        z: -100.0,
-    };
-
-    triangles.add(Triangle {
-        a: a, 
-        b: b,
-        c: d,
-        material: triangle_mat.clone(),
-    });
-
-    triangles.add(Triangle {
-        a: b,
-        b: c,
-        c: d,
-        material: triangle_mat.clone(),
-    });
+    let mut world = scene::make_random_sphere_scene();
+    world.join(scene::make_ground());
 
     // Camera
     let camera = Camera::new(
@@ -205,7 +158,7 @@ fn main() {
         image.aspect_ratio(),
     );
 
-    trace(&mut image, &camera, &spheres, &triangles, &render_settings);
+    trace(&mut image, &camera, &world, &render_settings);
 
     // File output.
     image.gamma_correct(render_settings.image_gamma);
