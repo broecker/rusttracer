@@ -1,6 +1,8 @@
 use crate::math::Vec3;
 
 // An axis-aligned bounding box.
+
+#[derive(Debug)]
 pub struct AABB {
   pub min: Vec3,
   pub max: Vec3,
@@ -31,8 +33,8 @@ impl AABB {
 
   pub fn add_point(&mut self, pt: &Vec3) {
     if !self.initialized {
-      self.min = *pt;
-      self.max = *pt;
+      self.min = pt.clone();
+      self.max = pt.clone();
       self.initialized = true;
       return
     }
@@ -42,9 +44,22 @@ impl AABB {
   }
 
   pub fn add_bbox(&mut self, other: &AABB) {
+    if !self.initialized {
+      self.min = other.min;
+      self.max = other.max;
+      self.initialized = true;
+      return
+    }
+
     self.min = component_wise_min(&self.min, &other.min);
     self.max = component_wise_max(&self.max, &other.max);
     self.initialized = true
+  }
+
+  pub fn add_sphere(&mut self, center: &Vec3, radius: f32) {
+    let r = Vec3{x: radius, y: radius, z: radius};
+    self.min = component_wise_min(&self.min, &(*center - r));
+    self.max = component_wise_max(&self.max, &(*center + r));
   }
 
   pub fn extend(&self) -> Vec3 {

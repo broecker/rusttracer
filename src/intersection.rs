@@ -155,8 +155,7 @@ impl Intersectable for Sphere {
 
     fn get_aabb(&self) -> AABB {
         let mut bbox = AABB::new();
-        bbox.add_point(&self.center);
-        bbox.add_point(&Vec3{x: self.center.x + self.radius, y: 0.0, z: 0.0});
+        bbox.add_sphere(&self.center, self.radius);        
         bbox
     }
 }

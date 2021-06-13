@@ -143,16 +143,9 @@ fn main() {
     };
 
     // World
-    let mut world = scene::make_random_sphere_scene();
-    world.join(scene::make_ground());
-    //world.join(scene::load_ply(String::from("./data/bun_zipper.ply")));
-
-    world = scene::load_ply(String::from("./data/bun_zipper.ply"));
+    let world = scene::load_ply(String::from("./data/bun_zipper.ply"));
     let bbox = world.get_aabb();
     println!("World {:?} -> {:?}", bbox.min, bbox.max);
-
-
-
 
     // Camera
     let camera = Camera::new(
